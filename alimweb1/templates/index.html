@@ -1,19 +1,62 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+  <meta charset="utf-8">
+  <title>Yapay Zeka Soru-Cevap</title>
 </head>
 <body>
-    <h1>İslam Alimi</h1>
-    <form action="/ask" method="post">
-        <label for="user_question">Sorunuzu girin: </label>
-        <input type="text" id="user_question" name="user_question">
-        <button type="submit">Sor</button>
-    </form>
-    {% if response %}
-        <p>Yapay Zeka Cevabı: {{ response }}</p>
-    {% endif %}
+  <h1>Yapay Zeka Soru-Cevap</h1>
+  <form action="/" method="post">
+    <input type="text" name="question" placeholder="Sorunuz">
+    <input type="submit" value="Gönder">
+  </form>
+  <div id="answer"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/google-ai/1.0.0-beta.1/client.js"></script>
+  <script>
+    const model = new google.ai.generative.GenerativeModel({
+      modelName: "gemini-pro",
+      generationConfig: {
+        temperature: 0.9,
+        topP: 1,
+        topK: 1,
+        maxOutputTokens: 2048,
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_NONE",
+        },
+      ],
+    });
+
+    document.querySelector("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const question = document.querySelector("input[name=question]").value;
+
+      const response = await model.startChat({
+        history: [
+          {
+            role: "user",
+            parts: [question],
+          },
+        ],
+      });
+
+      document.querySelector("#answer").innerHTML = response.last.text;
+    });
+  </script>
 </body>
 </html>
