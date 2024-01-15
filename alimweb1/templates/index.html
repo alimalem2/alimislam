@@ -1,62 +1,92 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Yapay Zeka Soru-Cevap</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Conversation</title>
+    <style>
+        #chat-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #user-input {
+            width: 80%;
+            padding: 8px;
+        }
+        #send-button {
+            width: 18%;
+            padding: 8px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Yapay Zeka Soru-Cevap</h1>
-  <form action="/" method="post">
-    <input type="text" name="question" placeholder="Sorunuz">
-    <input type="submit" value="Gönder">
-  </form>
-  <div id="answer"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/google-ai/1.0.0-beta.1/client.js"></script>
-  <script>
-    const model = new google.ai.generative.GenerativeModel({
-      modelName: "gemini-pro",
-      generationConfig: {
-        temperature: 0.9,
-        topP: 1,
-        topK: 1,
-        maxOutputTokens: 2048,
-      },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_NONE",
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_NONE",
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_NONE",
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_NONE",
-        },
-      ],
-    });
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Sorunuzu girin (Çıkmak için 'q' basın)">
+        <button id="send-button" onclick="sendMessage()">Gönder</button>
+    </div>
 
-    document.querySelector("form").addEventListener("submit", async (event) => {
-      event.preventDefault();
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        const apiKey = "AIzaSyAvDQjTto-gFHfGNw2uA_Nf8Xaf9MLr1Pg";
+        const modelEndpoint = "https://api.gemini-ai.io/v1/models/gemini-pro/chat";
 
-      const question = document.querySelector("input[name=question]").value;
+        function sendMessage() {
+            var userQuestion = document.getElementById('user-input').value;
+            if (userQuestion.toLowerCase() === 'q') {
+                alert('Çıkış yapılıyor...');
+                return;
+            }
 
-      const response = await model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: [question],
-          },
-        ],
-      });
+            // Add user message to the chat box
+            appendMessage('You:', userQuestion);
 
-      document.querySelector("#answer").innerHTML = response.last.text;
-    });
-  </script>
+            // Make API call to Gemini AI
+            callGeminiAI(userQuestion);
+
+            // Clear the input field
+            document.getElementById('user-input').value = '';
+        }
+
+        function callGeminiAI(userQuestion) {
+            // Gerçek bir API çağrısı yapılacak yer
+            $.ajax({
+                url: modelEndpoint,
+                type: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                data: JSON.stringify({ "messages": [{ "role": "user", "content": userQuestion }] }),
+                success: function (response) {
+                    var modelResponse = response.messages[0].content;
+                    appendMessage('AI:', modelResponse);
+                },
+                error: function (error) {
+                    console.error("API çağrısı sırasında bir hata oluştu:", error);
+                }
+            });
+        }
+
+        function appendMessage(role, message) {
+            var chatBox = document.getElementById('chat-box');
+            var newMessage = document.createElement('div');
+            newMessage.innerHTML = '<strong>' + role + '</strong>: ' + message;
+            chatBox.appendChild(newMessage);
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
 </body>
 </html>
